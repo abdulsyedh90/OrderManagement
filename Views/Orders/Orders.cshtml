@@ -1,0 +1,158 @@
+﻿@{
+    ViewBag.Title = "Orders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>@ViewBag.Title Page</h2>
+<h3>@ViewBag.Message</h3>
+
+<p>Use this area to provide additional information.</p>
+
+<div>
+    <div>
+        <button id="updateSelected">Update Completed</button>
+        <button id="deleteSelected">Delete</button>
+    </div>
+    <div>
+        <table id="orderTable" class="display" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Address 1</th>
+                    <th>Address 2</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>ZipCode</th>
+                    <th>ItemID</th>
+                    <th>Quantity</th>
+                    <th>OrderStatus</th>
+                    <th>Reason</th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<link href="~/Scripts/datatables.min.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/datatables.min.js"></script>
+<link href="~/Scripts/DataTables-1.10.20/css/dataTables.jqueryui.min.css" rel="stylesheet" />
+<script src="~/Scripts/DataTables-1.10.20/js/dataTables.jqueryui.min.js"></script>
+<script src="~/Scripts/ColReorder-1.5.2/js/dataTables.colReorder.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        var table = $('#orderTable').DataTable({
+            //"processing": true, // for show progress bar
+            //"serverSide": true, // for process server side
+            //"filter": true, // this is for disable filter (search box)
+            //"orderMulti": false, // for disable multiple column at once
+            //"pageLength": 5//
+            colReorder: true,
+            "ajax": {
+                url: "/Orders/LoadOrders",
+                "type": "GET",
+                "datatype": "json"
+            },
+            columns: [
+                { "data": "Id", visible: false },
+                { "data": "FirstName" },
+                { "data": "LastName" },
+                { "data": "Address1" },
+                { "data": "Address2" },
+                { "data": "City" },
+                { "data": "State" },
+                { "data": "ZipCode" },
+                { "data": "ItemID" },
+                { "data": "Quantity" },
+                {
+                    "data": "OrderStatusID",
+                    render: function (data, type, row) {
+                        if (data === 1) {
+                            return 'Created';
+                        }
+                        return data === 2 ? 'Errored' : 'Completed'
+                    }
+                },
+                { "data": "Reason" },
+                {
+                    "data": "OrderStatusID",
+                    render: function (data, type, row) {
+                        if (data === 1) {
+                            data = '<a href="/Orders/UpdateOrder?id='+row.Id+'" >Update</a>';
+                        }
+                        else if (data === 2) {
+                            data = '<a href="/Orders/DeleteOrder?id='+row.Id+'" >Delete</a>';
+                        }
+                        else {
+                            data = '';
+                        }
+                        return data;
+                    }
+                }
+            ]
+        });
+
+
+
+        $('#orderTable tbody').on('click', 'tr', function () {
+            $(this).toggleClass('selected');
+        });
+
+        $('#updateSelected').click(function (e) {
+            e.preventDefault();
+
+            var allSelected = $.map(table.rows('.selected').data(), function (item) {
+                return item;
+            });
+            var ids = '';
+            for (var i = 0; i < allSelected.length; i++) {
+                if (i === allSelected.length - 1) {
+                    ids += allSelected[i].Id;
+                }
+                else {
+                    ids += allSelected[i].Id + ',';
+                }
+
+            }
+            console.log(ids);
+            $.ajax({
+                url: "/Orders/UpdateOrders?ids="+ids,
+                "type": "GET",
+                traditional: true,
+                success: function (data) { window.location.reload(); }
+            });
+
+        });
+
+        $('#deleteSelected').click(function (e) {
+            e.preventDefault();
+
+            var allSelected = $.map(table.rows('.selected').data(), function (item) {
+                return item;
+            });
+            var ids = '';
+            for (var i = 0; i < allSelected.length; i++) {
+                if (i === allSelected.length - 1) {
+                    ids += allSelected[i].Id;
+                }
+                else {
+                    ids += allSelected[i].Id + ',';
+                }
+
+            }
+            console.log(ids);
+            $.ajax({
+                url: "/Orders/DeleteOrders?ids="+ids,
+                "type": "GET",
+                traditional: true,
+                success: function (data) { window.location.reload(); }
+            });
+
+        });
+
+
+
+    });
+</script>
